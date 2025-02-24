@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Database</title>
+    <style>
+        #sidebar {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100%;
+            background-color: white;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.3);
+            transition: right 0.3s ease-in-out;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        #sidebar.active {
+            right: 0;
+        }
+        #close-sidebar {
+            display: block;
+            margin-bottom: 10px;
+            text-align: right;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        function loadPageContent(pageId) {
+            fetch(`/get-page-content/${pageId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("page-content").innerHTML = data.content.join("<br>");
+                    document.getElementById("sidebar").classList.add("active");
+                })
+                .catch(error => console.error("Error:", error));
+        }
+        function closeSidebar() {
+            document.getElementById("sidebar").classList.remove("active");
+        }
+    </script>
+</head>
+<body>
+    <h1>📌 Notion 메인 데이터베이스</h1>
+    <table border="1">
+        <thead>
+            <tr><th>브랜드</th><th>레퍼런스</th><th>브랜드정보</th><th>페이지 보기</th></tr>
+        </thead>
+        <tbody>
+            {% for page in data %}
+            <tr>
+                <td><a href="#" onclick="loadPageContent('{{ page.id }}')">{{ page.브랜드 }}</a></td>
+                <td>{{ page.레퍼런스 }}</td>
+                <td>{{ page.브랜드정보 }}</td>
+                <td><button onclick="loadPageContent('{{ page.id }}')">🔍 보기</button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div id="sidebar">
+        <span id="close-sidebar" onclick="closeSidebar()">❌ 닫기</span>
+        <h2>📌 선택한 페이지 콘텐츠</h2>
+        <div id="page-content">여기에 페이지 콘텐츠가 표시됩니다.</div>
+    </div>
+</body>
+</html>
