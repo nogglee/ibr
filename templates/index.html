@@ -26,44 +26,44 @@
             text-align: right;
             cursor: pointer;
         }
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table, th, td { border: 1px solid #ccc; }
+        th, td { padding: 8px; text-align: left; }
+        th { background-color: #f5f5f5; }
     </style>
     <script>
         function loadPageContent(pageId) {
-            fetch(`/get-page-content/${pageId}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById("page-content").innerHTML = data.content.join("<br>");
-                    document.getElementById("sidebar").classList.add("active");
-                })
-                .catch(error => console.error("Error:", error));
+          fetch(`/get-page-content/${pageId}`)
+            .then(response => response.json())
+            .then(data => {
+              document.getElementById("page-content").innerHTML = data.content.join("<br>");
+              document.getElementById("sidebar").classList.add("active");
+            })
+            .catch(error => console.error("Error:", error));
         }
         function closeSidebar() {
-            document.getElementById("sidebar").classList.remove("active");
+          document.getElementById("sidebar").classList.remove("active");
         }
-    </script>
+      </script>
 </head>
 <body>
-    <h1>📌 Notion 메인 데이터베이스</h1>
-    <table border="1">
-        <thead>
-            <tr><th>브랜드</th><th>레퍼런스</th><th>브랜드정보</th><th>페이지 보기</th></tr>
-        </thead>
-        <tbody>
-            {% for page in data %}
-            <tr>
-                <td><a href="#" onclick="loadPageContent('{{ page.id }}')">{{ page.브랜드 }}</a></td>
-                <td>{{ page.레퍼런스 }}</td>
-                <td>{{ page.브랜드정보 }}</td>
-                <td><button onclick="loadPageContent('{{ page.id }}')">🔍 보기</button></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <div id="sidebar">
-        <span id="close-sidebar" onclick="closeSidebar()">❌ 닫기</span>
-        <h2>📌 선택한 페이지 콘텐츠</h2>
-        <div id="page-content">여기에 페이지 콘텐츠가 표시됩니다.</div>
+  <h1>전체 브랜드 리스트 (페이지 {{ current_page }} / {{ total_pages }})</h1>
+  <div id="table-container">
+    {{ table|safe }}
+  </div>
+  <div style="margin-top:20px;">
+    {% if current_page > 1 %}
+    <a href="/?page={{ current_page - 1 }}">이전 페이지</a>
+    {% endif %}
+    {% if current_page < total_pages %} <a href="/?page={{ current_page + 1 }}">다음 페이지</a>
+      {% endif %}
+  </div>
+  <!-- Sidebar 영역 -->
+  <div id="sidebar">
+    <span id="close-sidebar" onclick="closeSidebar()">❌ 닫기</span>
+    <h2>선택한 브랜드 상세 콘텐츠</h2>
+    <div id="page-content">여기에 상세 콘텐츠가 표시됩니다.</div>
     </div>
 </body>
 </html>
