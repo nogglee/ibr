@@ -2,68 +2,107 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notion Database</title>
+    <title>전체 브랜드 리스트 (페이지네이션 적용)</title>
     <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table, th, td { border: 1px solid #ccc; }
+        th, td { padding: 8px; text-align: left; }
+        th { background-color: #f5f5f5; }
+        a { text-decoration: none; color: blue; }
+        /* Sidebar 스타일 */
         #sidebar {
             position: fixed;
             right: -400px;
             top: 0;
             width: 400px;
             height: 100%;
-            background-color: white;
+            background-color: #fff;
             box-shadow: -2px 0 5px rgba(0,0,0,0.3);
-            transition: right 0.3s ease-in-out;
+            transition: right 0.3s ease;
             padding: 20px;
             overflow-y: auto;
+            z-index: 1000;
         }
         #sidebar.active {
             right: 0;
         }
         #close-sidebar {
             display: block;
-            margin-bottom: 10px;
             text-align: right;
             cursor: pointer;
+            margin-bottom: 10px;
         }
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        table, th, td { border: 1px solid #ccc; }
-        th, td { padding: 8px; text-align: left; }
-        th { background-color: #f5f5f5; }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
     </style>
     <script>
-        function loadPageContent(pageId) {
-          fetch(`/get-page-content/${pageId}`)
-            .then(response => response.json())
-            .then(data => {
-              document.getElementById("page-content").innerHTML = data.content.join("<br>");
-              document.getElementById("sidebar").classList.add("active");
-            })
-            .catch(error => console.error("Error:", error));
+          function loadPageContent(notionUuid) {
+            if (!notionUuid) {
+              console.error("브랜드 page UUID가 없습니다!");
+              return;
+            }
+            console.log("브랜드 콘텐츠 요청 (UUID): ", notionUuid);
+
+            // Show loading state
+            document.getElementById('page-content').innerHTML = "<div class='loading'>로딩 중...</div>";
+            document.getElementById('sub-database').innerHTML = "<div class='loading'>로딩 중...</div>";
+
+            // Open sidebar
+            document.getElementById('sidebar').classList.add('active');
+
+            fetch(`/get-brand-content/${notionUuid}`)
+              .then(res => {
+                if (!res.ok) {
+                  throw new Error('서버 응답 오류: ' + res.status);
+                }
+                return res.json();
+              })
+              .then(data => {
+                  // Update page content
+                  const contentHtml = data.content.join('<br>');
+                  document.getElementById('page-content').innerHTML = contentHtml || "콘텐츠가 없습니다.";
+
+                  // Update sub-database content
+                  document.getElementById('sub-database').innerHTML = data.sub_database || "서브 데이터베이스 정보가 없습니다.";
+                })
+              .catch(err => {
+                console.error("데이터 로딩 오류:", err);
+                document.getElementById('page-content').innerHTML = "데이터를 불러오는 중 오류가 발생했습니다.";
+                document.getElementById('sub-database').innerHTML = "데이터를 불러오는 중 오류가 발생했습니다.";
+              });
         }
+
         function closeSidebar() {
-          document.getElementById("sidebar").classList.remove("active");
+          document.getElementById('sidebar').classList.remove('active');
         }
-      </script>
+</script>
 </head>
 <body>
-  <h1>전체 브랜드 리스트 (페이지 {{ current_page }} / {{ total_pages }})</h1>
-  <div id="table-container">
-    {{ table|safe }}
-  </div>
-  <div style="margin-top:20px;">
-    {% if current_page > 1 %}
-    <a href="/?page={{ current_page - 1 }}">이전 페이지</a>
-    {% endif %}
-    {% if current_page < total_pages %} <a href="/?page={{ current_page + 1 }}">다음 페이지</a>
+    <h1>전체 브랜드 리스트 (페이지 {{ current_page }} / {{ total_pages }})</h1>
+    
+    <div id="table-container">
+      {{ table|safe }}
+    </div>
+
+    <div style="margin-top:20px;">
+      {% if current_page > 1 %}
+      <a href="/?page={{ current_page - 1 }}">이전 페이지</a>
       {% endif %}
-  </div>
-  <!-- Sidebar 영역 -->
-  <div id="sidebar">
-    <span id="close-sidebar" onclick="closeSidebar()">❌ 닫기</span>
-    <h2>선택한 브랜드 상세 콘텐츠</h2>
-    <div id="page-content">여기에 상세 콘텐츠가 표시됩니다.</div>
+        {% if current_page < total_pages %} <a href="/?page={{ current_page + 1 }}">다음 페이지</a>
+          {% endif %}
+          </div>
+    <!-- 🔹 사이드바 (브랜드 상세 콘텐츠 + 서브 데이터베이스) -->
+    <div id="sidebar">
+      <span id="close-sidebar" onclick="closeSidebar()">❌ 닫기</span>
+      <h2>선택한 브랜드 상세 콘텐츠</h2>
+        <div id="page-content">여기에 브랜드 콘텐츠가 표시됩니다.</div>
+        
+        <h3>서브 데이터베이스</h3>
+        <div id="sub-database">여기에 서브 데이터베이스가 표시됩니다.</div>
     </div>
 </body>
 </html>
